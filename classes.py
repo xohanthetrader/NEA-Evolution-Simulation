@@ -1,5 +1,8 @@
 ﻿import numpy as np
-from typing import Callable
+import pygame
+from typing import Callable, Tuple
+
+
 def to_int(sig_hex_str : str) -> int:
     unsig_num = int(sig_hex_str[1:],16)
     if sig_hex_str[0] == 1:
@@ -67,12 +70,25 @@ def dir_order(pos1 : tuple[float,float],pos2 : tuple[float,float]) -> int:
 
 class Organism:
     def __init__(self,gene : Genome,world : World):
+        # Setting the initial state of the organism
         self._pos : tuple[float,float] = (0,0)
         self.gene = gene
         self._food : int = 0
         self._world = world
         self.LastAction : IAction = IAction()
+        # Setting the default neural network to the identity function
         self.NN : Callable[[list[float]],list[float]] = lambda x : x
+
+        # Getting colours for each channel
+        r = int(to_int(self.gene.get_gene()[len(self.gene.get_gene())-9:len(self.gene.get_gene())-6])/2 + 128)
+        g = int(to_int(self.gene.get_gene()[len(self.gene.get_gene())-3:])/2 + 128)
+        b = int(to_int(self.gene.get_gene()[len(self.gene.get_gene())-6:len(self.gene.get_gene())-3])/2 + 128)
+        self.colour: Tuple[int,int,int] = (r,g,b)
+        #Initialisaing a sprite object
+        self.sprite= pygame.Rect(((0,0),(20,20)))
+
+
+
 
     def set_position(self,pos : tuple[float,float]):
         pos_as_arr = [pos[0],pos[1]]

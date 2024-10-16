@@ -154,13 +154,3 @@ def cross(organism1:Organism,organism2:Organism,world:World) -> Organism:
             genome += "0" + hex(weight)[2:].zfill(gene1.get_length() - 1)
 
     return Organism(Genome(genome,gene1.get_length()),world)
-
-test_world = World((0,0),100,10)
-test_organism1 = Organism(Genome("0ff000",3),test_world)
-test_organism2 = Organism(Genome("0ff000",3),test_world)
-
-test_breedables = {test_organism1 : 10,test_organism2 : 5}
-
-
-
-input()
