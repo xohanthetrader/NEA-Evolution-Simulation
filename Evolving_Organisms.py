@@ -4,9 +4,10 @@ import random
 
 world_organisms : list[Organism] = []
 world_foods : list[tuple[float,float]] = []
-speed_scaling : float = 1
+speed_scaling : float = 0.2
 weight_scaling : float = 0
-mutation_rate : float = 0.05
+mutation_rate : float = 0.1
+visibility_scale : float = 10000000000000
 
 def gen_genome(gene_length:int,val_range:int) -> Genome:
     genome = ""
@@ -38,14 +39,12 @@ def gen_nn(gene : Genome, layer_count : int, layer_sizes : list[int], activation
     weights = list(map(to_int,weights_str))
     matrices = []
     biases = []
-
     curr_weight = 0
     for i in range(layer_count - 1):
         matrices.append(np.reshape(weights[curr_weight:layer_sizes[i] * layer_sizes[i+1] + curr_weight],(layer_sizes[i+1],layer_sizes[i])))
         curr_weight = layer_sizes[i] * layer_sizes[i+1] + curr_weight
         biases.append(weights[curr_weight:layer_sizes[i+1] + curr_weight])
         curr_weight = layer_sizes[i+1] + curr_weight
-
     def nn(vec : list[float]) -> list[float]:
         for transform in range(len(matrices)):
             vec = list(map(activation,matrices[transform] @ vec + biases[transform]))
@@ -88,12 +87,16 @@ def translate_organism(organism:Organism):
 
 def process_action(organism:Organism):
     if isinstance(organism.LastAction,Eat):
-        world_foods.remove(organism.LastAction.food_loc)
-        organism.change_food(1)
+        #print("here''")
+        if organism.LastAction.food_loc in world_foods:
+            #print("here")
+            world_foods.remove(organism.LastAction.food_loc)
+            organism.change_food(1)
     if isinstance(organism.LastAction,Kill):
-        if to_int(organism.gene.get_gene()[len(organism.gene.get_gene())-6:len(organism.gene.get_gene())-3]) > to_int(organism.LastAction.killed_organism.gene.get_gene()[len(organism.LastAction.killed_organism.gene.get_gene())-6:len(organism.LastAction.killed_organism.gene.get_gene())-3]):
-            world_organisms.remove(organism.LastAction.killed_organism)
-            organism.change_food(2)
+        if organism.LastAction.killed_organism in world_organisms:
+            if to_int(organism.gene.get_gene()[len(organism.gene.get_gene())-6:len(organism.gene.get_gene())-3]) > to_int(organism.LastAction.killed_organism.gene.get_gene()[len(organism.LastAction.killed_organism.gene.get_gene())-6:len(organism.LastAction.killed_organism.gene.get_gene())-3]):
+                world_organisms.remove(organism.LastAction.killed_organism)
+                organism.change_food(2)
 
 def fitness(organisms:list[Organism],threshold:int) -> dict[Organism,int]:
     breedables : dict[Organism,int] = {}
@@ -115,7 +118,7 @@ def sample(organisms:dict[Organism,int]) -> Organism:
 def cross(organism1:Organism,organism2:Organism,world:World) -> Organism:
     gene1 = organism1.gene
     gene2 = organism2.gene
-
+    print(gene2.get_gene())
     weights_str1 = []
     for i in range(int(len(gene1.get_gene()) / gene1.get_length())):
         weight = ""
@@ -130,7 +133,7 @@ def cross(organism1:Organism,organism2:Organism,world:World) -> Organism:
         weight = ""
         for j in range(gene2.get_length()):
             weight += gene2.get_gene()[i + j]
-        weights_str1.append(weight)
+        weights_str2.append(weight)
 
     weights2 = list(map(to_int, weights_str2))
 
@@ -149,8 +152,16 @@ def cross(organism1:Organism,organism2:Organism,world:World) -> Organism:
     genome = ""
     for weight in new_weights:
         if weight < 0:
-            genome += "1" + hex(weight)[2:].zfill(gene1.get_length() - 1)
+            genome += "1" + hex(int(weight))[3:].zfill(gene1.get_length() - 1)
         else:
-            genome += "0" + hex(weight)[2:].zfill(gene1.get_length() - 1)
+            genome += "0" + hex(int(weight))[2:].zfill(gene1.get_length() - 1)
+        if "x" in genome:
+            print(weight)
+            out = ""
+            if weight < 0:
+                out += "1" + hex(int(weight))[3:].zfill(gene1.get_length() - 1)
+            else:
+                out += "0" + hex(int(weight))[2:].zfill(gene1.get_length() - 1)
+            raise RuntimeError("Hmmmm " + genome + " " + out)
 
     return Organism(Genome(genome,gene1.get_length()),world)

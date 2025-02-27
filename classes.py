@@ -63,10 +63,10 @@ def square_distance(pos1 : tuple[float,float],pos2 : tuple[float,float]) -> floa
     return ((pos1[0] - pos2[0]) ** 2) + ((pos1[1] - pos2[1]) ** 2)
 
 def dir_order(pos1 : tuple[float,float],pos2 : tuple[float,float]) -> int:
-    angle = np.arctan2(pos2[1] - pos1[1],pos2[1] - pos1[1])
+    angle = np.arctan2(pos2[1] - pos1[1],pos2[0] - pos1[0])
     if angle < 0:
         angle = angle + 2 * np.pi
-    return int((8 * angle) / (2 * np.pi))
+    return int(((8 * angle) % (2 * np.pi)) / (2 * np.pi))
 
 class Organism:
     def __init__(self,gene : Genome,world : World):
@@ -112,12 +112,13 @@ class Organism:
         closest_in_dir : list[Organism | int]= [0 for _ in range(8)]
         food_locations = [(-1.,-1.) for _ in range(8)]
         for organism in organisms:
-            distance = square_distance(self.get_position(),organism.get_position())
-            if distance<= (visibility * visibility_scaling) ** 2:
-                direction = dir_order(self.get_position(),organism.get_position())
-                if distance < closest_dist_sq_in_dir[direction]:
-                    closest_in_dir[direction] = organism
-                    closest_dist_sq_in_dir[direction] = distance
+            if organism != self:
+                distance = square_distance(self.get_position(),organism.get_position())
+                if distance<= (visibility * visibility_scaling) ** 2:
+                    direction = dir_order(self.get_position(),organism.get_position())
+                    if distance < closest_dist_sq_in_dir[direction]:
+                        closest_in_dir[direction] = organism
+                        closest_dist_sq_in_dir[direction] = distance
         for food in foods:
             distance = square_distance(self.get_position(),food)
             if distance<= (visibility * visibility_scaling) ** 2:
@@ -134,33 +135,39 @@ class Organism:
                 nn_vec.append(0)
             elif closest_in_dir[i] == 1:
                 nn_vec.append(0)
-                nn_vec.append(np.sqrt(closest_dist_sq_in_dir[i]))
+                nn_vec.append(100-np.sqrt(closest_dist_sq_in_dir[i]))
             else:
-                nn_vec.append(np.sqrt(closest_dist_sq_in_dir[i]))
+                nn_vec.append(100-np.sqrt(closest_dist_sq_in_dir[i]))
                 nn_vec.append(0)
-
         out = self.NN(nn_vec)
-        if max(out) == out[0]:
-            self.LastAction = Move(((out[0] % 8)/8) * 2 * np.pi)
-        elif max(out) == out[1]:
+        if max(out) in out[:8]:
+            self.LastAction = Move(out.index(max(out))/8 * 2 * np.pi)
+        elif max(out) == out[8]:
             min_dist = np.inf
-            min_index = 0
+            min_index = -1
             for i in range(8):
                 if type(closest_in_dir[i]) == type(Organism):
-                    if closest_dist_sq_in_dir[i] < min_dist:
+                    if closest_dist_sq_in_dir[i] < min_dist and closest_dist_sq_in_dir[i] < closest_dist_sq_in_dir[i] < ((visibility * visibility_scaling) ** 2)/25:
                         min_dist = closest_dist_sq_in_dir[i]
                         min_index = i
-            self.LastAction = Kill(closest_in_dir[min_index])
-        elif max(out) == out[2]:
+            if min_index != -1:
+                self.LastAction = Kill(closest_in_dir[min_index])
+            else:
+                self.LastAction = IAction()
+        elif max(out) == out[9]:
             min_dist = np.inf
-            min_index = 0
+
+            min_index = -1
             for i in range(8):
                 if type(closest_in_dir[i]) == int:
                     if closest_in_dir[i] == 1:
-                        if closest_dist_sq_in_dir[i]  < min_dist:
+                        if closest_dist_sq_in_dir[i]  < min_dist and closest_dist_sq_in_dir[i] < ((visibility * visibility_scaling) ** 2)/25:
                             min_dist = closest_dist_sq_in_dir[i]
                             min_index = i
-            self.LastAction = Eat(food_locations[min_index])
+            if min_index != -1:
+                self.LastAction = Eat(food_locations[min_index])
+            else:
+                self.LastAction = IAction()
 
 
 

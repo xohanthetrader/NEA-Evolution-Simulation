@@ -1,0 +1,10 @@
+{
+    "Background": "#e8cc76",
+    "Foreground": "#f8efd3",
+    "Positive": "#00ff00",
+    "Negative": "#ff0000",
+    "Config": "#0000ff",
+    "btnText": "#ffffff",
+    "settings": "#888888",
+    "menu_background": "#888888"
+}
