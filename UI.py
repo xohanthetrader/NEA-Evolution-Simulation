@@ -174,7 +174,7 @@ colour_offset = 0
 colours_shown = 8
 
 
-
+#Secondary button collection
 setting_buttons : dict[Tuple[Tuple[int,int],Tuple[int,int]],Tuple[Callable[None,None],str,Optional[str]]] = {
     ((menu_background.left + 10,menu_background.top + 10),(160,40)):(change_button_font,"Config","font"),
     ((menu_background.left + 10,menu_background.top + 60),(160,40)):(save_colours,"Config","Save"),
@@ -189,6 +189,7 @@ def set_buttons(buttons,elements,keys):
 
 set_buttons(setting_buttons,[(partial(change_colour,list(colours.keys())[i]),"Config",list(colours.keys())[i]) for i in range(colours_shown)],colour_button_pos)
 
+#Setting variables
 iters_per_gen = 100
 itercount = 0
 isFirstGenAndIter = True
@@ -262,6 +263,7 @@ while running:
                 child = cross(mother,father,world)
                 child.NN = gen_nn(child.gene,2,[16,10],lambda x: np.abs(x))
                 organisms.append(child)
+            #Data collection
             eat_act_data.append(eat_act_count)
             kill_act_data.append(kill_act_count)
             move_act_data.append(move_act_count)
@@ -288,7 +290,7 @@ while running:
 
 
 
-
+    #Drawing everything
     draw_buttons(global_buttons)
     draw_buttons(add_remove_buttons)
     render_entities()

@@ -17,6 +17,7 @@ def add_menu():
     gen_buttons()
     in_add_menu = True
 
+#Local buttons collection
 add_remove_buttons : dict[Tuple[Tuple[int,int],Tuple[int,int]],Tuple[Callable[[],None],str,Optional[str]]] = {
     ((1590,10),(40,40)) : (add_menu,"Positive","+"),
     ((1630,10),(40,40)) : (remove_graph,"Negative","-")
@@ -51,7 +52,7 @@ def render_graphs() -> None:
     for figure in figures:
         draw_graph(figure)
 
-def fix_data(x : List[int],y : List[int]) -> Tuple[List[int],List[int]]:
+def fix_data(x : List[int],y : List[int]) -> Tuple[List[int],List[int]]:#Adjust Shape of graph to ensure straight lines
     new_x = []
     new_y = []
     for i in range(len(x)):
@@ -63,6 +64,7 @@ def fix_data(x : List[int],y : List[int]) -> Tuple[List[int],List[int]]:
             new_y.append(y[i])
     return new_x,new_y
 
+#Adds data to the data log
 def commit_data(name:str,x:List[int],y:List[int]):
     datas[name] = fix_data(x,y)
 

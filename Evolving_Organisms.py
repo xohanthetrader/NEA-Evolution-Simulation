@@ -20,7 +20,9 @@ def gen_genome(gene_length:int,val_range:int) -> Genome:
     return Genome(genome,len(hex(val_range)[2:]) + 1)
 
 def to_int(sig_hex_str : str) -> int:
+    #Extract Magnitude
     unsig_num = int(sig_hex_str[1:],16)
+    #Check sign
     if sig_hex_str[0] == "1":
         return -unsig_num
     return unsig_num
@@ -29,6 +31,7 @@ def gen_nn(gene : Genome, layer_count : int, layer_sizes : list[int], activation
     [list[float]],list[float]]:
     if layer_count == 0 or layer_sizes == []:
         raise RuntimeError("Dimensions too low")
+    #converting Genome
     weights_str = []
     for i in range(int(len(gene.get_gene())/gene.get_length())):
         weight = ""
@@ -45,6 +48,7 @@ def gen_nn(gene : Genome, layer_count : int, layer_sizes : list[int], activation
         curr_weight = layer_sizes[i] * layer_sizes[i+1] + curr_weight
         biases.append(weights[curr_weight:layer_sizes[i+1] + curr_weight])
         curr_weight = layer_sizes[i+1] + curr_weight
+    #function for the actual network
     def nn(vec : list[float]) -> list[float]:
         for transform in range(len(matrices)):
             vec = list(map(activation,matrices[transform] @ vec + biases[transform]))
@@ -53,12 +57,14 @@ def gen_nn(gene : Genome, layer_count : int, layer_sizes : list[int], activation
     return nn
 
 def gen_positions(world:World):
+    #Set to avoid collisions
     positions = set()
     for organism in world_organisms:
         pos = (random.random() * world.get_size(),random.random() * world.get_size())
         attempts = 0
         while pos in positions:
             if attempts > 10:
+                #Dont keep trying to place something forever if the world is full
                 return
             pos = (random.random() * world.get_size(), random.random() * world.get_size())
             attempts += 1
@@ -87,7 +93,7 @@ def translate_organism(organism:Organism):
 
 def process_action(organism:Organism):
     if isinstance(organism.LastAction,Eat):
-        #print("here''")
+        #Check for appropriate actions
         if organism.LastAction.food_loc in world_foods:
             #print("here")
             world_foods.remove(organism.LastAction.food_loc)
@@ -107,8 +113,10 @@ def fitness(organisms:list[Organism],threshold:int) -> dict[Organism,int]:
 
 def sample(organisms:dict[Organism,int]) -> Organism:
     max_val = sum(organisms.values())
+    #Random Aspect for sampling
     sample_num = random.randrange(max_val)
     count = 0
+    #Treat it as a cumulative distribution
     for organism,food in organisms.items():
         if sample_num < count + food:
             return organism
@@ -119,6 +127,7 @@ def cross(organism1:Organism,organism2:Organism,world:World) -> Organism:
     gene1 = organism1.gene
     gene2 = organism2.gene
     print(gene2.get_gene())
+    #Converting first gene
     weights_str1 = []
     for i in range(int(len(gene1.get_gene()) / gene1.get_length())):
         weight = ""
@@ -128,6 +137,7 @@ def cross(organism1:Organism,organism2:Organism,world:World) -> Organism:
 
     weights1 = list(map(to_int, weights_str1))
 
+    #Converting second gene
     weights_str2 = []
     for i in range(int(len(gene2.get_gene()) / gene2.get_length())):
         weight = ""
@@ -155,6 +165,7 @@ def cross(organism1:Organism,organism2:Organism,world:World) -> Organism:
             genome += "1" + hex(int(weight))[3:].zfill(gene1.get_length() - 1)
         else:
             genome += "0" + hex(int(weight))[2:].zfill(gene1.get_length() - 1)
+        #Checking for invalid output
         if "x" in genome:
             print(weight)
             out = ""

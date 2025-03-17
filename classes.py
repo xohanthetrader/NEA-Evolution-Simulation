@@ -26,11 +26,12 @@ class World:
     def __init__(self,corner : tuple[int,int],size : int,scale_factor : int):
         if size * scale_factor > world_display_size:
             raise RuntimeError("Required world display bigger than allocated")
+            #Ebsures it can be displayed
         else:
             self._corner = corner
             self._size = size
             self._scale_factor = scale_factor
-
+    #Retrieve Information
     def get_corner(self) -> tuple[int,int]:
         return self._corner
 
@@ -40,19 +41,21 @@ class World:
     def get_scale_factor(self) -> int:
         return self._scale_factor
 
-
+#Create All Actions Under one type
 class IAction:
     pass
 
 class Move(IAction):
     def __init__(self,angle:float):
         self._angle = angle % (2 * np.pi)
+        #Restrict domain of angle
 
     def get_angle(self) -> float:
         return self._angle
 
     def set_angle(self,angle:float):
         self._angle = angle % (2 * np.pi)
+
 
 class Eat(IAction):
     def __init__(self,pos : tuple[float,float]):
@@ -107,6 +110,7 @@ class Organism:
         return self._food
 
     def gen_action(self,visibility_scaling:float,organisms : 'list[Organism]',foods : list[tuple[float,float]]):
+        #collecting nearby entities
         visibility = to_int(self.gene.get_gene()[len(self.gene.get_gene())-9:len(self.gene.get_gene())-6])
         closest_dist_sq_in_dir = [np.inf for _ in range(8)]
         closest_in_dir : list[Organism | int]= [0 for _ in range(8)]
@@ -127,7 +131,7 @@ class Organism:
                     closest_in_dir[direction] = 1
                     closest_dist_sq_in_dir[direction] = distance
                     food_locations[direction] = food
-
+        #Forming data into input vector
         nn_vec = []
         for i in range(8):
             if closest_in_dir[i] == 0:
@@ -140,6 +144,7 @@ class Organism:
                 nn_vec.append(100-np.sqrt(closest_dist_sq_in_dir[i]))
                 nn_vec.append(0)
         out = self.NN(nn_vec)
+        #Processing output vecotr
         if max(out) in out[:8]:
             self.LastAction = Move(out.index(max(out))/8 * 2 * np.pi)
         elif max(out) == out[8]:
